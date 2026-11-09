@@ -1,0 +1,31 @@
+{
+  "id": "example-sqlite",
+  "engine": "sqlite",
+  "database": "example-sqlite",
+  "sqlite_path": "/sqlite/REPLACE_SQLITE_JOB/REPLACE_DATABASE.sqlite3",
+  "job": "REPLACE_SQLITE_JOB",
+  "folder": "sqlite/REPLACE_SQLITE_JOB",
+  "pattern": "*.sql.gz",
+  "format": "gzip",
+  "schedule": "0 4 * * *",
+  "timezone": "REPLACE_GENERATOR_IANA_TIMEZONE",
+  "timestamp_timezone": "REPLACE_GENERATOR_IANA_TIMEZONE",
+  "enabled_since": "REPLACE_WITH_INSTALLATION_UTC_ISO_DATE",
+  "timestamp_regex": "REPLACE_SQLITE_JOB_(?P<stamp>[0-9]{8}_[0-9]{6})[.]sql[.]gz",
+  "timestamp_format": "%Y%m%d_%H%M%S",
+  "completion": {
+    "mode": "unconfigured",
+    "evidence": "REPLACE_WITH_VERIFIED_ATOMIC_RENAME_OR_SUCCESS_HOOK_CONTRACT"
+  },
+  "minimum_sql_bytes": 1024,
+  "minimum_size_ratio": 0.5,
+  "required_tables": [
+    "REPLACE_ESSENTIAL_TABLE"
+  ],
+  "assertions": [
+    {
+      "sql": "SELECT COUNT(*) > 0 FROM REPLACE_ESSENTIAL_TABLE",
+      "expected": "1"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+# Allowlist the complete build context. Runtime configuration is never sent.
+**
+!Dockerfile
+!deploy/
+!deploy/offsite/
+!deploy/offsite/*.py
+!deploy/offsite/requirements.txt

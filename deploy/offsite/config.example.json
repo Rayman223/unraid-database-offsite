@@ -1,0 +1,61 @@
+{
+  "source_root": "/mnt/user/appdata/database-backup/backups",
+  "jobs_file": "/mnt/user/appdata/database-backup/backups.yml",
+  "state_dir": "/mnt/user/REPLACE_PRIVATE_SHARE/offsite/production/state",
+  "repository": "rclone:REPLACE_DROPBOX_REMOTE:REPLACE_DEDICATED_FOLDER/production/mariadb-offsite-v1",
+  "repository_id": "SET_AFTER_INIT",
+  "rclone_config": "/mnt/user/REPLACE_PRIVATE_SHARE/offsite/production/config/rclone.conf",
+  "password_file": "/mnt/user/REPLACE_PRIVATE_SHARE/offsite/production/config/restic-password",
+  "command_timeout": 1800,
+  "generation_grace_seconds": 7200,
+  "transfer_grace_seconds": 3600,
+  "restore_timeout": 7200,
+  "restore_memory": "2g",
+  "restore_image": "mariadb:11.8",
+  "inventory": {
+    "host": "REPLACE_MARIADB_HOST",
+    "port": 3306,
+    "user": "offsite_inventory",
+    "password_file": "/mnt/user/REPLACE_PRIVATE_SHARE/offsite/production/config/inventory-password",
+    "version_prefix": "11.8.",
+    "exclusions": {
+      "information_schema": "System metadata",
+      "performance_schema": "Runtime metrics",
+      "mysql": "System accounts: document recreation separately",
+      "sys": "Diagnostic views"
+    }
+  },
+  "notifications": {
+    "discord_url_file": "/mnt/user/REPLACE_PRIVATE_SHARE/offsite/production/config/discord-url",
+    "healthcheck_url_file": "/mnt/user/REPLACE_PRIVATE_SHARE/offsite/production/config/healthcheck-url",
+    "restore_healthcheck_url_file": "/mnt/user/REPLACE_PRIVATE_SHARE/offsite/production/config/restore-healthcheck-url"
+  },
+  "bases": [
+    {
+      "id": "example-app",
+      "database": "REPLACE_DATABASE_NAME",
+      "job": "REPLACE_JOB_NAME",
+      "folder": "mariadb/REPLACE_JOB_NAME",
+      "pattern": "*.sql.gz",
+      "schedule": "0 3 * * *",
+      "timezone": "REPLACE_GENERATOR_IANA_TIMEZONE",
+      "enabled_since": "REPLACE_WITH_INSTALLATION_UTC_ISO_DATE",
+      "timestamp_regex": "REPLACE_WITH_NAMED_GROUP_stamp_MATCHING_REAL_FILENAME",
+      "timestamp_format": "REPLACE_FILENAME_STRPTIME_FORMAT",
+      "completion": {
+        "mode": "unconfigured",
+        "evidence": "REPLACE_WITH_VERIFIED_ATOMIC_RENAME_OR_SUCCESS_HOOK_CONTRACT"
+      },
+      "minimum_sql_bytes": 1024,
+      "required_tables": [
+        "REPLACE_ESSENTIAL_TABLE"
+      ],
+      "assertions": [
+        {
+          "sql": "SELECT COUNT(*) > 0 FROM REPLACE_ESSENTIAL_TABLE",
+          "expected": "1"
+        }
+      ]
+    }
+  ]
+}

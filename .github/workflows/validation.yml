@@ -1,0 +1,65 @@
+name: Validation
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.13'
+      - name: Install validation tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y sqlite3 shellcheck
+          python -m pip install -r requirements-dev.txt
+      - name: Static checks
+        run: |
+          ruff check --isolated --select E4,E7,E9,F,I deploy/offsite tests/offsite
+          ruff format --isolated --check deploy/offsite tests/offsite
+          shellcheck deploy/offsite/run.sh unraid/user-scripts/*.sh unraid/profile.env.example scripts/*.sh
+          git diff --check
+      - name: Unit tests and real SQLite imports
+        run: OFFSITE_REAL_SQLITE=1 python -m unittest discover -s tests/offsite -v
+      - name: Build controller and check its CLI
+        run: |
+          docker build -t unraid-database-offsite:test .
+          docker run --rm unraid-database-offsite:test --help
+      - name: Extract pinned Restic and rclone tools
+        run: |
+          mkdir -p /tmp/offsite-bin
+          docker create --name offsite-tools-extract unraid-database-offsite:test --help
+          docker cp offsite-tools-extract:/usr/local/bin/restic /tmp/offsite-bin/restic
+          docker cp offsite-tools-extract:/usr/local/bin/rclone /tmp/offsite-bin/rclone
+          docker rm offsite-tools-extract
+      - name: Encrypted repository roundtrip and SQLite report recovery
+        run: PATH="/tmp/offsite-bin:$PATH" PYTHONPATH=tests/offsite OFFSITE_REAL_TOOLS=1 OFFSITE_REAL_SQLITE=1 python -m unittest test_offsite.RealRepositoryTests test_sqlite.SQLiteRepositoryTests -v
+      - name: Isolated MariaDB Docker restore tests
+        run: |
+          docker pull mariadb:11.8
+          OFFSITE_REAL_DOCKER=1 python -m unittest discover -s tests/offsite -p test_restore_real.py -v
+      - name: Isolated SQLite Docker restore tests
+        run: OFFSITE_REAL_DOCKER=1 OFFSITE_SQLITE_IMAGE="$(docker image inspect unraid-database-offsite:test --format '{{.Id}}')" python -m unittest discover -s tests/offsite -p test_sqlite.py -v
+
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+      - name: Install verified Gitleaks and scan Git history
+        run: |
+          bash scripts/install-gitleaks.sh /tmp/offsite-gitleaks
+          /tmp/offsite-gitleaks/gitleaks git --redact --no-banner .
