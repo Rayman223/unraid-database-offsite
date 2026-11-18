@@ -45,9 +45,11 @@ pas celle du générateur ; ce champ reste distinct.
    ```
 
 3. Vérifier le contrat de publication de cette révision. Reporter son ID dans
-   `generator_image_id` à la racine de chaque profil, puis retirer tous les
-   `completion.generator_image_id` des bases. Conserver les modes et les preuves
-   `completion.evidence`, actualisées si la révision a changé.
+   `generator_image_id` à la racine de chaque profil. **Conserver temporairement
+   les `completion.generator_image_id` des bases**, tous identiques à cet ID :
+   cette configuration est lisible par l'ancien et le nouveau contrôleur.
+   Conserver les modes et les preuves `completion.evidence`, actualisées si la
+   révision a changé.
 4. Sélectionner la nouvelle image dans `OFFSITE_IMAGE`. Pour les profils SQLite,
    reporter son ID local dans `sqlite_restore_image`. Mettre également à jour
    ces références dans les scripts planifiés.
@@ -74,6 +76,13 @@ pas celle du générateur ; ce champ reste distinct.
    flock -w 3600 "$OFFSITE_ROOT/state/schedule.lock" \
      bash "$OFFSITE_ROOT/run.sh" restore-check
    ```
+
+6. Une fois tous les scripts planifiés du profil basculés et les éventuelles
+   exécutions de l'ancienne image terminées, retirer les
+   `completion.generator_image_id` des bases. Garder uniquement le champ global,
+   puis relancer `preflight` et `monitor`. Ne pas supprimer ces doublons tant
+   qu'un script utilise encore l'ancienne image : celle-ci les exige et
+   bloquerait la collecte ainsi que les autres commandes.
 
 Aucun dépôt Restic, état, mot de passe ou identifiant de base ne doit être
 réinitialisé. Aucune migration SQL n'est nécessaire. Pour un retour à l'ancienne
