@@ -103,6 +103,37 @@ def restoration_image(config, base):
     ]
 
 
+def generator_image_id(config):
+    """Une image par profil ; compatibilité avec les anciens contrats par base."""
+    atomic = [
+        base["completion"]
+        for base in config["bases"]
+        if base["completion"]["mode"] == "atomic-rename"
+    ]
+    if "generator_image_id" in config:
+        expected = config["generator_image_id"]
+    elif atomic:
+        expected = atomic[0].get("generator_image_id")
+    else:
+        return None
+    if not isinstance(expected, str) or not re.fullmatch(
+        r"sha256:[a-f0-9]{64}", expected
+    ):
+        raise Failure(
+            "configuration", "Identifiant exact de l'image du générateur requis."
+        )
+    for completion in atomic:
+        # Sans champ global, chaque ancien contrat doit fournir le même ID.
+        if (
+            "generator_image_id" not in config or "generator_image_id" in completion
+        ) and completion.get("generator_image_id") != expected:
+            raise Failure(
+                "configuration",
+                "Identifiants d'image du générateur divergents : centraliser generator_image_id au niveau du profil et retirer les champs par base.",
+            )
+    return expected
+
+
 @contextlib.contextmanager
 def lock(path):
     with Path(path).open("a") as handle:
@@ -224,12 +255,6 @@ def validate(config):
             )
         if base["completion"]["mode"] not in ("atomic-rename", "success-marker"):
             raise Failure("configuration", "Contrat de fin de dump non configuré.")
-        if base["completion"]["mode"] == "atomic-rename" and not re.fullmatch(
-            r"sha256:[a-f0-9]{64}", base["completion"].get("generator_image_id", "")
-        ):
-            raise Failure(
-                "configuration", "Identifiant exact de l'image du générateur requis."
-            )
         evidence = base["completion"].get("evidence", "")
         if len(evidence) < 20 or "REPLACE" in evidence:
             raise Failure("configuration", "Preuve du contrat de fin de dump requise.")
@@ -263,6 +288,7 @@ def validate(config):
             raise Failure(
                 "configuration", "Format non pris en charge (gzip ou gpg-gzip requis)."
             )
+    generator_image_id(config)
     if has_mariadb and not re.fullmatch(
         r"(?:[a-zA-Z0-9_.:/-]+@sha256:[a-f0-9]{64}|mariadb:\d+\.\d+(?:\.\d+)?)",
         config["restore_image"],

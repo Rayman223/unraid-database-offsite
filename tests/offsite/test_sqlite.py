@@ -100,7 +100,7 @@ class SQLiteContractTests(SQLiteFixture):
         }
         inspected = [
             {
-                "Image": self.base["completion"]["generator_image_id"],
+                "Image": self.config["generator_image_id"],
                 "Config": {"Env": ["TZ=UTC"]},
             }
         ]

@@ -96,6 +96,7 @@ class Fixture(unittest.TestCase):
             "password_file": str(self.root / "password"),
             "rclone_config": str(self.root / "rclone.conf"),
             "restore_image": "mariadb:11.8",
+            "generator_image_id": "sha256:" + "a" * 64,
             "restore_memory": "1g",
             "command_timeout": 30,
             "inventory": {
@@ -122,7 +123,6 @@ class Fixture(unittest.TestCase):
                     "completion": {
                         "mode": "atomic-rename",
                         "evidence": "Contrat testé sur image de fixture immuable.",
-                        "generator_image_id": "sha256:" + "a" * 64,
                     },
                     "required_tables": ["sentinel"],
                     "assertions": [

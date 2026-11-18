@@ -17,6 +17,7 @@ verified completion contract before expecting validation to succeed.
 | `rclone_config` | Private writable remote configuration file |
 | `password_file` | Private Restic password file |
 | `backup_container` | Generator container name; omitted means `database-backup` |
+| `generator_image_id` | Exact local generator image ID, shared by all `atomic-rename` bases in this profile; `sha256:` plus 64 lowercase hex digits |
 | `command_timeout` | External command timeout in seconds; default 1800 |
 | `generation_grace_seconds` | Grace from a scheduled dump slot; default 7200 |
 | `transfer_grace_seconds` | Transfer grace after the generation deadline; default 3600 |
@@ -117,15 +118,22 @@ A readable gzip or unchanged file size does not prove successful generation.
 Choose one contract based on the exact generator image/code actually running:
 
 - `mode: "atomic-rename"`: final filenames are published only after successful
-  dump, compression/encryption, flush and close. Set `generator_image_id` to the
-  generator's actual local `sha256:...` ID, and `evidence` to an audited source
-  URL or meaningful verified contract reference. Any image change blocks
-  collection until the contract is verified again.
+  dump, compression/encryption, flush and close. Set the profile-level
+  `generator_image_id` once, at the root of `config.json`, to the generator's
+  actual local `sha256:...` ID. Keep `completion.evidence` in each base, pointing
+  to an audited source URL or meaningful verified contract reference. Any image
+  change blocks collection until the contract is verified again.
 - `mode: "success-marker"`: run `deploy/offsite/mark_complete.py DUMP_PATH`
   only from the generator's **successful** post-close hook. It writes an
   atomic `.complete.json` with size/hash/completion time. Do not run it from a
   periodic file sweep or failure hook; it does not independently prove dumping
   succeeded. The helper is standalone and needs only Python's standard library.
+
+Legacy `completion.generator_image_id` fields remain supported when every
+`atomic-rename` base supplies the same valid ID. Conflicting legacy IDs, including
+conflicts with a profile-level ID, are rejected. A success-marker-only profile
+does not need an image ID. See the [migration procedure](GENERATOR_IMAGE.md)
+(French), including controller rollout and generator image pinning.
 
 Inspect only necessary metadata, never a full environment containing secrets:
 

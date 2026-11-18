@@ -22,6 +22,7 @@ from core import (
     artifact_id,
     date,
     engine,
+    generator_image_id,
     load,
     private_file,
     restoration_image,
@@ -310,11 +311,12 @@ def check_jobs(config):
     timezone = environment.get("TZ")
     if not timezone:
         raise Failure("configuration", "TZ explicite requis sur database-backup.")
+    expected_image = generator_image_id(config)
     errors = {}
     for base in config["bases"]:
         if (
             base["completion"]["mode"] == "atomic-rename"
-            and base["completion"].get("generator_image_id") != inspected["Image"]
+            and expected_image != inspected["Image"]
         ):
             errors[base["id"]] = (
                 "Image du générateur différente du contrat de publication atomique."
