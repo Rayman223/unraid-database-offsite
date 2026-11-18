@@ -1,6 +1,7 @@
 {
   "source_root": "/mnt/user/appdata/database-backup/backups",
   "jobs_file": "/mnt/user/appdata/database-backup/backups.yml",
+  "generator_image_id": "REPLACE_WITH_VERIFIED_GENERATOR_IMAGE_ID_sha256",
   "state_dir": "/mnt/user/REPLACE_PRIVATE_SHARE/offsite/production/state",
   "repository": "rclone:REPLACE_DROPBOX_REMOTE:REPLACE_DEDICATED_FOLDER/production/mariadb-offsite-v1",
   "repository_id": "SET_AFTER_INIT",

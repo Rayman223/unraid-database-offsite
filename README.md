@@ -148,6 +148,10 @@ Edit `config/config.json` using the
 absolute private paths, expected databases and exclusions, job schedules,
 timezones, actual filename format, completion contract and data checks.
 
+Configure `generator_image_id` once at the root of each profile. Existing
+per-base IDs remain supported when consistent; see the
+[migration procedure](docs/GENERATOR_IMAGE.md) (French).
+
 For MariaDB, preload a matching restore image and record a fixed digest where
 possible:
 
